@@ -1,0 +1,11 @@
+{
+    "Sid": "AllowBucketPolicyChange",
+    "Effect": "Allow",
+    "Action": [
+      "s3:PutBucketPolicy",
+      "s3:GetBucketPolicy",
+      "s3:DeleteBucketPolicy"
+    ],
+    "Resource": "arn:aws:s3:::class02"
+  }
+  
