@@ -1,0 +1,15 @@
+{
+    "Sid": "AllowUploadWithoutOverwrite",
+    "Effect": "Allow",
+    "Action": "s3:PutObject",
+    "Resource": "arn:aws:s3:::class02/*",
+    "Condition": {
+      "StringEqualsIfExists": {
+        "s3:x-amz-acl": "bucket-owner-full-control"
+      },
+      "StringNotEqualsIfExists": {
+        "s3:x-amz-copy-source": "*"
+      }
+    }
+  }
+  
