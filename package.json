@@ -11,8 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
     "express": "^5.1.0",
+    "minio": "^8.0.5",
     "multer": "^2.0.1"
   }
 }
