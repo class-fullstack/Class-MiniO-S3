@@ -2,9 +2,9 @@ const minioClient = require("../src/dbs/init.minio");
 
 (async () => {
   try {
-    const bucketName = "minio-class";
-    const objectName = "example.txt";
-    const filePath = "./example.txt";
+    const bucketName = "minio-class"; // This is name bucket
+    const objectName = "example.txt"; // This is name object
+    const filePath = "./example.txt"; // Path to the file you want to upload
 
     // Upload a file
     await minioClient.fPutObject(bucketName, objectName, filePath);
