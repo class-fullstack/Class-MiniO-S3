@@ -28,4 +28,10 @@ router.get("/:bucketName/:objectName/url", MediaController.getObjectUrl);
 // Route for getting information about a file
 router.get("/:bucketName/:objectName/info", MediaController.getObjectInfo);
 
+// Route for deleting multiple files
+router.delete("/multiple", MediaController.deleteObjects);
+
+// Route for deleting a file
+router.delete("/:bucketName/:objectName", MediaController.deleteObject);
+
 module.exports = router;

@@ -90,6 +90,31 @@ class MediaModel {
       throw error;
     }
   }
+
+  static async deleteObject(bucketName, objectName) {
+    try {
+      await minioClient.removeObject(bucketName, objectName);
+      console.log(`✅ Deleted "${objectName}" from "${bucketName}"`);
+    } catch (error) {
+      console.error(`❌ Error deleting "${objectName}":`, error.message);
+      throw error;
+    }
+  }
+
+  static async deleteObjects(bucketName, objectNames = []) {
+    try {
+      if (!Array.isArray(objectNames) || objectNames.length === 0) {
+        throw new Error("Danh sách object không hợp lệ.");
+      }
+
+      const result = await minioClient.removeObjects(bucketName, objectNames);
+      console.log(`✅ Deleted objects:`, objectNames);
+      return result;
+    } catch (error) {
+      console.error(`❌ Error deleting multiple objects:`, error.message);
+      throw error;
+    }
+  }
 }
 
 module.exports = MediaModel;

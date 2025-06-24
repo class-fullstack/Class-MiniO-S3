@@ -74,6 +74,24 @@ class MediaService {
     const objectInfo = await MediaModel.getObjectInfo(bucketName, objectName);
     return objectInfo;
   }
+
+  static async deleteObject(bucketName, objectName) {
+    if (!bucketName || !objectName) {
+      throw new Error("Bucket name and object name are required");
+    }
+
+    await MediaModel.deleteObject(bucketName, objectName);
+    return { success: true, message: "Object deleted successfully" };
+  }
+
+  static async deleteObjects(bucketName, objectNames) {
+    if (!bucketName || !objectNames || objectNames.length === 0) {
+      throw new Error("Bucket name and object names are required");
+    }
+
+    await MediaModel.deleteObjects(bucketName, objectNames);
+    return { success: true, message: "Objects deleted successfully" };
+  }
 }
 
 module.exports = MediaService;
