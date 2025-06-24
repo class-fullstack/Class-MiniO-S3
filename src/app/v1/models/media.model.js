@@ -1,18 +1,28 @@
 const minioClient = require("../../../dbs/init.minio");
+const { getFileTypeFromMime } = require("../../../utils/generateObjectId.util");
 
 class MediaModel {
-  static async uploadObject({ bucketName, objectName, fileBuffer, mimeType }) {
-    console.log(bucketName, objectName, fileBuffer, mimeType);
+  static async uploadObject({
+    bucketName,
+    objectName,
+    fileBuffer,
+    mimeType,
+    metadata,
+  }) {
     try {
+      const fullMetaData = {
+        "Content-Type": mimeType,
+        ...metadata,
+      };
+
       await minioClient.putObject(
         bucketName,
         objectName,
         fileBuffer,
         fileBuffer.length,
-        {
-          "Content-Type": mimeType, // Set the correct MIME type
-        }
+        fullMetaData
       );
+
       console.log(`✅ File uploaded successfully: ${objectName}`);
     } catch (error) {
       console.error(`❌ Error uploading file "${objectName}":`, error.message);
@@ -114,6 +124,61 @@ class MediaModel {
       console.error(`❌ Error deleting multiple objects:`, error.message);
       throw error;
     }
+  }
+
+  static async getListObjects(bucketName) {
+    // 1️⃣ Chuyển stream listObjectsV2 ➜ mảng tên object
+    const objectNames = await new Promise((resolve, reject) => {
+      const names = [];
+      const stream = minioClient.listObjectsV2(bucketName, "", true);
+      stream.on("data", (obj) => names.push(obj.name));
+      stream.on("end", () => resolve(names));
+      stream.on("error", reject);
+    });
+
+    // 2️⃣ Với mỗi object ➜ lấy stat + (nếu là ảnh) tạo presigned URL
+    const objects = await Promise.all(
+      objectNames.map(async (name) => {
+        // Lấy metadata / kích thước / content-type
+        const stat = await minioClient.statObject(bucketName, name);
+
+        // Tùy server, content-type có thể nằm trong metaData hoặc trực tiếp trên stat
+        const mimeType =
+          stat.metaData?.["content-type"] ||
+          stat.metaData?.["Content-Type"] ||
+          stat.contentType ||
+          "";
+
+        const fileType = getFileTypeFromMime(mimeType);
+
+        // Thông tin chung
+        const baseInfo = {
+          id: name, // objectName == id
+          type: fileType,
+          contentType: mimeType,
+          size: stat.size,
+          lastModified: stat.lastModified,
+        };
+
+        // Nếu là ảnh → tạo URL xem trực tiếp
+        if (fileType === "image") {
+          const url = await minioClient.presignedGetObject(
+            bucketName,
+            name,
+            3600, // 1 giờ
+            {
+              "response-content-type": mimeType,
+              "response-content-disposition": "inline",
+            }
+          );
+          return { ...baseInfo, url };
+        }
+
+        return baseInfo;
+      })
+    );
+
+    return objects;
   }
 }
 

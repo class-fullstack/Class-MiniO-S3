@@ -19,6 +19,9 @@ router.post(
   MediaController.uploadMultipleFiles
 );
 
+// Route for listing objects in a bucket
+router.get("/:bucketName", MediaController.getListObjects);
+
 // Route for fetching a file
 router.get("/:bucketName/:objectName", MediaController.downLoadObject);
 

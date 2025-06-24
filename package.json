@@ -11,8 +11,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dayjs": "^1.11.13",
     "express": "^5.1.0",
     "minio": "^8.0.5",
-    "multer": "^2.0.1"
+    "multer": "^2.0.1",
+    "nanoid": "^5.1.5"
   }
 }

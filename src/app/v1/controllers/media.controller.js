@@ -35,6 +35,23 @@ class MediaController {
     }
   }
 
+  async getListObjects(req, res) {
+    const { bucketName } = req.params;
+    try {
+      const objects = await MediaService.getListObjects(bucketName);
+      return res.status(200).json({
+        success: true,
+        message: "Objects fetched successfully",
+        data: objects,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   async uploadSingleFile(req, res) {
     try {
       const file = await MediaService.uploadSingleFile(req);

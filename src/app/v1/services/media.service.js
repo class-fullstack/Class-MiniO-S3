@@ -1,4 +1,8 @@
 const MediaConstant = require("../../../constants/media.constant");
+const {
+  getFileTypeFromMime,
+  generateObjectId,
+} = require("../../../utils/generateObjectId.util");
 const MediaModel = require("../models/media.model");
 
 class MediaService {
@@ -14,13 +18,36 @@ class MediaService {
     const fileBuffer = file.buffer;
     const mineType = file.mimetype;
 
-    const media = await MediaModel.uploadObject({
+    const fileType = getFileTypeFromMime(mineType);
+    const objectId = generateObjectId({
+      type: fileType.toUpperCase(),
+      randomLength: 10,
+    });
+
+    // Metadata tùy chỉnh
+    const metadata = {
+      objectId: objectId,
+      uploader: "Nguyen Tien Tai",
+      fileType: fileType,
+      originalName: fileName,
+      mineType: mineType,
+    };
+
+    await MediaModel.uploadObject({
       bucketName,
-      objectName: fileName,
+      objectName: objectId,
       fileBuffer,
       contentType: mineType,
+      metadata,
     });
-    return media;
+    return {
+      id: objectId,
+      type: fileType,
+      contentType: mineType,
+      size: file.size,
+      originalName: file.originalname,
+      bucket: bucketName,
+    };
   }
 
   static async uploadMultipleFiles(req) {
@@ -30,16 +57,46 @@ class MediaService {
       throw new Error("No files uploaded");
     }
 
-    const bucketName = MediaConstant.BucketName; // Replace with your bucket name
+    const bucketName = MediaConstant.BucketName;
 
-    const objects = files.map((file) => ({
-      objectName: file.originalname, // You can modify this to change the file name if needed
-      fileBuffer: file.buffer,
-      mimeType: file.mimetype,
-    }));
+    const uploadTasks = files.map(async (file) => {
+      const mimeType = file.mimetype;
+      const fileType = getFileTypeFromMime(mimeType);
 
-    const media = await MediaModel.uploadObjects(bucketName, objects);
-    return media;
+      const objectId = generateObjectId({
+        company: "class",
+        type: fileType.toUpperCase(),
+        randomLength: 10,
+      });
+
+      const metadata = {
+        objectId,
+        uploader: "Nguyen Tien Tai",
+        fileType,
+        originalName: file.originalname,
+        mimeType,
+      };
+
+      await MediaModel.uploadObject({
+        bucketName,
+        objectName: objectId,
+        fileBuffer: file.buffer,
+        mimeType,
+        metaData: metadata,
+      });
+
+      return {
+        id: objectId,
+        type: fileType,
+        contentType: mimeType,
+        size: file.size,
+        originalName: file.originalname,
+        bucket: bucketName,
+      };
+    });
+
+    const results = await Promise.all(uploadTasks);
+    return results;
   }
 
   static async downLoadObject(bucketName, objectName) {
@@ -58,10 +115,16 @@ class MediaService {
 
     const oneMinute = 60; // 1 minute in seconds
 
+    const fileInfo = await MediaModel.getObjectInfo(bucketName, objectName);
+
     const url = await MediaModel.getObjectUrl(
       bucketName,
       objectName,
-      oneMinute
+      oneMinute,
+      {
+        "response-content-type": fileInfo.metaData.minetype, // hoặc image/jpeg tùy loại file
+        "response-content-disposition": "inline",
+      }
     );
     return url;
   }
@@ -73,6 +136,15 @@ class MediaService {
 
     const objectInfo = await MediaModel.getObjectInfo(bucketName, objectName);
     return objectInfo;
+  }
+
+  static async getListObjects(bucketName) {
+    if (!bucketName) {
+      throw new Error("Bucket name is required");
+    }
+
+    const objects = await MediaModel.getListObjects(bucketName);
+    return objects;
   }
 
   static async deleteObject(bucketName, objectName) {
