@@ -44,6 +44,52 @@ class MediaModel {
       throw error;
     }
   }
+
+  static async downLoadObject(bucketName, objectName) {
+    try {
+      const dataStream = await minioClient.getObject(bucketName, objectName);
+      return dataStream;
+    } catch (error) {
+      console.error(`❌ Error fetching file "${objectName}":`, error.message);
+      throw error;
+    }
+  }
+
+  static async getObjectUrl(
+    bucketName,
+    objectName,
+    expirySeconds = 3600,
+    reqParams = {}
+  ) {
+    try {
+      const url = await minioClient.presignedGetObject(
+        bucketName,
+        objectName,
+        expirySeconds,
+        reqParams
+      );
+      return url;
+    } catch (error) {
+      console.error(
+        `❌ Error generating URL for "${objectName}":`,
+        error.message
+      );
+      throw error;
+    }
+  }
+
+  static async getObjectInfo(bucketName, objectName) {
+    try {
+      const info = await minioClient.statObject(bucketName, objectName);
+      return info;
+    } catch (error) {
+      console.error(
+        `❌ Error getting info for "${objectName}":`,
+        error.message
+      );
+      throw error;
+    }
+  }
 }
 
 module.exports = MediaModel;

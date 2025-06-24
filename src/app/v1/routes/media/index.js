@@ -19,4 +19,13 @@ router.post(
   MediaController.uploadMultipleFiles
 );
 
+// Route for fetching a file
+router.get("/:bucketName/:objectName", MediaController.downLoadObject);
+
+// Route for fetching URL of a file
+router.get("/:bucketName/:objectName/url", MediaController.getObjectUrl);
+
+// Route for getting information about a file
+router.get("/:bucketName/:objectName/info", MediaController.getObjectInfo);
+
 module.exports = router;

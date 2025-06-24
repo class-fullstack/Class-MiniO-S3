@@ -41,6 +41,39 @@ class MediaService {
     const media = await MediaModel.uploadObjects(bucketName, objects);
     return media;
   }
+
+  static async downLoadObject(bucketName, objectName) {
+    if (!bucketName || !objectName) {
+      throw new Error("Bucket name and object name are required");
+    }
+
+    const dataStream = await MediaModel.downLoadObject(bucketName, objectName);
+    return dataStream;
+  }
+
+  static async getObjectUrl(bucketName, objectName) {
+    if (!bucketName || !objectName) {
+      throw new Error("Bucket name and object name are required");
+    }
+
+    const oneMinute = 60; // 1 minute in seconds
+
+    const url = await MediaModel.getObjectUrl(
+      bucketName,
+      objectName,
+      oneMinute
+    );
+    return url;
+  }
+
+  static async getObjectInfo(bucketName, objectName) {
+    if (!bucketName || !objectName) {
+      throw new Error("Bucket name and object name are required");
+    }
+
+    const objectInfo = await MediaModel.getObjectInfo(bucketName, objectName);
+    return objectInfo;
+  }
 }
 
 module.exports = MediaService;
