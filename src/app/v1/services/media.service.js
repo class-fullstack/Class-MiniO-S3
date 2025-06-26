@@ -7,6 +7,7 @@ const {
   getFolderByFileType,
 } = require("../../../utils/generateObjectId.util");
 const MediaModel = require("../models/media.model");
+const { buildObjectName } = require("../../../utils/buildObjectName.util");
 
 class MediaService {
   static async uploadSingleFile(req) {
@@ -16,17 +17,8 @@ class MediaService {
     const bucketName = MediaConstant.BucketName;
     const { originalname, buffer, mimetype, size } = file;
 
-    const fileType = getFileTypeFromMime(mimetype);
-    const extension = path.extname(originalname); // e.g., '.jpg'
-
-    const objectId = generateObjectId({
-      company: "class",
-      type: fileType.toUpperCase(),
-      randomLength: 10,
-    });
-
-    const folderName = getFolderByFileType(fileType);
-    const objectName = `${folderName}/${objectId}${extension}`;
+    const { objectName, objectId, folderName, fileType, envFolder } =
+      buildObjectName(originalname, mimetype);
 
     const metadata = {
       objectId,
@@ -53,6 +45,7 @@ class MediaService {
       originalName: originalname,
       bucket: bucketName,
       folder: folderName,
+      environment: envFolder,
     };
   }
 
@@ -66,17 +59,9 @@ class MediaService {
 
     const uploadTasks = files.map(async (file) => {
       const { originalname, buffer, mimetype, size } = file;
-      const fileType = getFileTypeFromMime(mimetype);
-      const extension = path.extname(originalname);
 
-      const objectId = generateObjectId({
-        company: "class",
-        type: fileType.toUpperCase(),
-        randomLength: 10,
-      });
-
-      const folderName = getFolderByFileType(fileType);
-      const objectName = `${folderName}/${objectId}${extension}`;
+      const { objectName, objectId, folderName, fileType, envFolder } =
+        buildObjectName(originalname, mimetype);
 
       const metadata = {
         objectId,
@@ -103,6 +88,7 @@ class MediaService {
         originalName: originalname,
         bucket: bucketName,
         folder: folderName,
+        environment: envFolder,
       };
     });
 
