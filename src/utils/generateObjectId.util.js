@@ -46,7 +46,25 @@ const getFileTypeFromMime = (mimeType = "") => {
 
   return "unknown";
 };
+
+const getFolderByFileType = (fileType = "unknown") => {
+  const map = {
+    image: "images",
+    video: "videos",
+    audio: "audios",
+    pdf: "pdfs",
+    doc: "docs",
+    excel: "excels",
+    zip: "archives",
+    text: "texts",
+    unknown: "others",
+  };
+
+  return map[fileType] || "others";
+};
+
 module.exports = {
   generateObjectId,
   getFileTypeFromMime,
+  getFolderByFileType,
 };

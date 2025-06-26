@@ -1,58 +1,63 @@
+const path = require("path");
+
 const MediaConstant = require("../../../constants/media.constant");
 const {
   getFileTypeFromMime,
   generateObjectId,
+  getFolderByFileType,
 } = require("../../../utils/generateObjectId.util");
 const MediaModel = require("../models/media.model");
 
 class MediaService {
   static async uploadSingleFile(req) {
     const file = req.file;
+    if (!file) throw new Error("No file uploaded");
 
-    if (!file) {
-      throw new Error("No file uploaded");
-    }
+    const bucketName = MediaConstant.BucketName;
+    const { originalname, buffer, mimetype, size } = file;
 
-    const bucketName = MediaConstant.BucketName; // Replace with your bucket name
-    const fileName = file.originalname; // You can modify this to change the file name if needed
-    const fileBuffer = file.buffer;
-    const mineType = file.mimetype;
+    const fileType = getFileTypeFromMime(mimetype);
+    const extension = path.extname(originalname); // e.g., '.jpg'
 
-    const fileType = getFileTypeFromMime(mineType);
     const objectId = generateObjectId({
+      company: "class",
       type: fileType.toUpperCase(),
       randomLength: 10,
     });
 
-    // Metadata tùy chỉnh
+    const folderName = getFolderByFileType(fileType);
+    const objectName = `${folderName}/${objectId}${extension}`;
+
     const metadata = {
-      objectId: objectId,
-      uploader: "Nguyen Tien Tai",
-      fileType: fileType,
-      originalName: fileName,
-      mineType: mineType,
+      objectId,
+      uploader: "Nguyen Tien Tai", // optional: lấy từ auth
+      fileType,
+      originalName: originalname,
+      mimeType: mimetype,
     };
 
     await MediaModel.uploadObject({
       bucketName,
-      objectName: objectId,
-      fileBuffer,
-      contentType: mineType,
-      metadata,
+      objectName,
+      fileBuffer: buffer,
+      mimeType: mimetype,
+      metaData: metadata,
     });
+
     return {
       id: objectId,
+      path: objectName,
       type: fileType,
-      contentType: mineType,
-      size: file.size,
-      originalName: file.originalname,
+      contentType: mimetype,
+      size,
+      originalName: originalname,
       bucket: bucketName,
+      folder: folderName,
     };
   }
 
   static async uploadMultipleFiles(req) {
     const files = req.files;
-
     if (!files || files.length === 0) {
       throw new Error("No files uploaded");
     }
@@ -60,8 +65,9 @@ class MediaService {
     const bucketName = MediaConstant.BucketName;
 
     const uploadTasks = files.map(async (file) => {
-      const mimeType = file.mimetype;
-      const fileType = getFileTypeFromMime(mimeType);
+      const { originalname, buffer, mimetype, size } = file;
+      const fileType = getFileTypeFromMime(mimetype);
+      const extension = path.extname(originalname);
 
       const objectId = generateObjectId({
         company: "class",
@@ -69,29 +75,34 @@ class MediaService {
         randomLength: 10,
       });
 
+      const folderName = getFolderByFileType(fileType);
+      const objectName = `${folderName}/${objectId}${extension}`;
+
       const metadata = {
         objectId,
         uploader: "Nguyen Tien Tai",
         fileType,
-        originalName: file.originalname,
-        mimeType,
+        originalName: originalname,
+        mimeType: mimetype,
       };
 
       await MediaModel.uploadObject({
         bucketName,
-        objectName: objectId,
-        fileBuffer: file.buffer,
-        mimeType,
+        objectName,
+        fileBuffer: buffer,
+        mimeType: mimetype,
         metaData: metadata,
       });
 
       return {
         id: objectId,
+        path: objectName,
         type: fileType,
-        contentType: mimeType,
-        size: file.size,
-        originalName: file.originalname,
+        contentType: mimetype,
+        size,
+        originalName: originalname,
         bucket: bucketName,
+        folder: folderName,
       };
     });
 
