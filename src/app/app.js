@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // This is where you would import and use your MinIO client to interact with MinIO.
 // require("../../tests/minio.test");
